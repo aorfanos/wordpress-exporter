@@ -83,9 +83,16 @@ func (c *ConfigFile) ParseConf() *ConfigFile {
 	return c
 }
 
-func FetchJSONFromEndpoint(APIEndpoint string) []byte {
+func FetchJSONFromEndpoint(APIEndpoint string, auth bool) []byte {
 	APIBase := "https://aorfanos.com"
-	fetchURL := fmt.Sprintf("%s%s", APIBase, APIEndpoint)
+	var fetchURL string
+	if auth == false {
+		fetchURL = fmt.Sprintf("%s%s", APIBase, APIEndpoint)
+	}
+	if auth == true {
+		fetchURL = fmt.Sprintf("%s%s", APIBase, APIEndpoint)
+	}
+
 	response, err := http.Get(fetchURL)
 	errCheck(err)
 	data, _ := ioutil.ReadAll(response.Body)
@@ -106,14 +113,14 @@ func CountJSONItems(JSONResponse []byte) int {
 
 func (c *WordpressCollector) Collect(ch chan<- prometheus.Metric) {
 	var _wordpress = new(Wordpress)
-	_wordpress.categories = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories"))
-	_wordpress.posts = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/posts"))
-	_wordpress.tags = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/tags"))
-	_wordpress.pages = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/pages"))
-	_wordpress.comments = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/comments"))
-	_wordpress.media = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/media"))
-	_wordpress.users = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/users"))
-	_wordpress.themes = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories"))
+	_wordpress.categories = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories", false))
+	_wordpress.posts = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/posts", false))
+	_wordpress.tags = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/tags", false))
+	_wordpress.pages = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/pages", false))
+	_wordpress.comments = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/comments", false))
+	_wordpress.media = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/media", false))
+	_wordpress.users = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/users", false))
+	_wordpress.themes = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories", false))
 
 	ch <- prometheus.MustNewConstMetric(c.categories, prometheus.GaugeValue, float64(_wordpress.categories))
 	ch <- prometheus.MustNewConstMetric(c.posts, prometheus.GaugeValue, float64(_wordpress.posts))
