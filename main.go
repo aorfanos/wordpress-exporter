@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -15,8 +16,10 @@ import (
 )
 
 var (
-	portNum    = flag.Int("port", 11011, "The port to expose metrics to")
-	configFile = flag.String("config.file", "wordpress-exporter.yml", "Configure which WordPress sites to monitor")
+	portNum      = flag.Int("port", 11011, "The port to expose metrics to")
+	configFile   = flag.String("config.file", "wordpress-exporter.yml", "Configure which WordPress sites to monitor")
+	authUsername = flag.String("auth.user", "admin", "User to use with basic auth")
+	authPassword = flag.String("auth.pass", "admin", "Password to use with basic auth")
 )
 
 func init() {
@@ -85,20 +88,20 @@ func (c *ConfigFile) ParseConf() *ConfigFile {
 
 func FetchJSONFromEndpoint(APIEndpoint string, auth bool) []byte {
 	APIBase := "https://aorfanos.com"
-	var fetchURL string
-	if auth == false {
-		fetchURL = fmt.Sprintf("%s%s", APIBase, APIEndpoint)
+	HTTPClient := &http.Client{}
+	fetchURL := fmt.Sprintf("%s%s", APIBase, APIEndpoint)
+	request, err := http.NewRequest("GET", fetchURL, nil)
+	errCheck(err)
+	if auth {
+		request.Header.Add("Authentication", BasicAuth(*authUsername, *authPassword))
 	}
-	if auth == true {
-		fetchURL = fmt.Sprintf("%s%s", APIBase, APIEndpoint)
-	}
-
-	response, err := http.Get(fetchURL)
+	response, err := HTTPClient.Do(request)
 	errCheck(err)
 	data, _ := ioutil.ReadAll(response.Body)
 	return data
 }
 
+// count items returned in JSON and return length
 func CountJSONItems(JSONResponse []byte) int {
 	var JSONObject interface{}
 	json.Unmarshal(JSONResponse, &JSONObject)
@@ -109,6 +112,12 @@ func CountJSONItems(JSONResponse []byte) int {
 	}
 
 	return len(JSONObjectSlice)
+}
+
+func BasicAuth(username, password string) string {
+	authString := username + ":" + password
+	authHeaderValue := fmt.Sprintf("Basic ", base64.StdEncoding.EncodeToString([]byte(authString)))
+	return authHeaderValue
 }
 
 func (c *WordpressCollector) Collect(ch chan<- prometheus.Metric) {
