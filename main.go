@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -82,7 +83,8 @@ func (c *ConfigFile) ParseConf() *ConfigFile {
 	return c
 }
 
-func FetchJSONFromEndpoint(APIBase, APIEndpoint string) []byte {
+func FetchJSONFromEndpoint(APIEndpoint string) []byte {
+	APIBase := "https://ohmyhat.gr"
 	fetchURL := fmt.Sprintf("%s%s", APIBase, APIEndpoint)
 	response, err := http.Get(fetchURL)
 	errCheck(err)
@@ -90,22 +92,23 @@ func FetchJSONFromEndpoint(APIBase, APIEndpoint string) []byte {
 	return data
 }
 
-func CountJSONItems(JSONResponse []byte) {
+func CountJSONItems(JSONResponse []byte) int {
+	var JSONObject interface{}
+	json.Unmarshal(JSONResponse, &JSONObject)
 
+	JSONObjectSlice, isOK := JSONObject.([]interface{})
+	if !isOK {
+		fmt.Println("Cannot convert the JSON object")
+	}
+
+	return len(JSONObjectSlice)
 }
 
 func (c *WordpressCollector) Collect(ch chan<- prometheus.Metric) {
 	var _wordpress = new(Wordpress)
-	_wordpress.categories = 2
+	_wordpress.categories = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories"))
 	ch <- prometheus.MustNewConstMetric(c.categories, prometheus.GaugeValue, float64(_wordpress.categories))
 }
-
-// func CountItemsFromEndpoint(endpoint string) {
-// 	sites :=
-// 	for _, service := range sites.ParseConf().MonitoredWordpress {
-// 		fmt.Println("", service)
-// 	}
-// }
 
 func errCheck(e error) {
 	if e != nil {
