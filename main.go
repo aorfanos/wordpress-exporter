@@ -84,7 +84,7 @@ func (c *ConfigFile) ParseConf() *ConfigFile {
 }
 
 func FetchJSONFromEndpoint(APIEndpoint string) []byte {
-	APIBase := "https://ohmyhat.gr"
+	APIBase := "https://aorfanos.com"
 	fetchURL := fmt.Sprintf("%s%s", APIBase, APIEndpoint)
 	response, err := http.Get(fetchURL)
 	errCheck(err)
@@ -107,7 +107,23 @@ func CountJSONItems(JSONResponse []byte) int {
 func (c *WordpressCollector) Collect(ch chan<- prometheus.Metric) {
 	var _wordpress = new(Wordpress)
 	_wordpress.categories = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories"))
+	_wordpress.posts = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/posts"))
+	_wordpress.tags = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/tags"))
+	_wordpress.pages = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/pages"))
+	_wordpress.comments = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/comments"))
+	_wordpress.media = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/media"))
+	_wordpress.users = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/users"))
+	_wordpress.themes = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories"))
+
 	ch <- prometheus.MustNewConstMetric(c.categories, prometheus.GaugeValue, float64(_wordpress.categories))
+	ch <- prometheus.MustNewConstMetric(c.posts, prometheus.GaugeValue, float64(_wordpress.posts))
+	ch <- prometheus.MustNewConstMetric(c.tags, prometheus.GaugeValue, float64(_wordpress.tags))
+	ch <- prometheus.MustNewConstMetric(c.pages, prometheus.GaugeValue, float64(_wordpress.pages))
+	ch <- prometheus.MustNewConstMetric(c.comments, prometheus.GaugeValue, float64(_wordpress.comments))
+	ch <- prometheus.MustNewConstMetric(c.media, prometheus.GaugeValue, float64(_wordpress.media))
+	ch <- prometheus.MustNewConstMetric(c.users, prometheus.GaugeValue, float64(_wordpress.users))
+	ch <- prometheus.MustNewConstMetric(c.themes, prometheus.GaugeValue, float64(_wordpress.themes))
+
 }
 
 func errCheck(e error) {
