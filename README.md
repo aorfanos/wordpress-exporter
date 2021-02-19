@@ -34,7 +34,7 @@ scrape_configs:
 
 The outcome will look something like this:
 
-![Grafana WordPress dashboard](https://imgur.com/e5A6UnM)
+![Grafana WordPress dashboard](https://i.imgur.com/e5A6UnM.png)
 
 ## Metrics
 
