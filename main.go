@@ -15,11 +15,17 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	UserAgent = "prometheus-wordpress-exporter"
+)
+
 var (
-	portNum      = flag.Int("port", 11011, "The port to expose metrics to")
-	configFile   = flag.String("config.file", "wordpress-exporter.yml", "Configure which WordPress sites to monitor")
-	authUsername = flag.String("auth.user", "admin", "User to use with basic auth")
-	authPassword = flag.String("auth.pass", "admin", "Password to use with basic auth")
+	portNum          = flag.Int("port", 11011, "The port to expose metrics to")
+	configFile       = flag.String("config.file", "wordpress-exporter.yml", "Configure which WordPress sites to monitor")
+	monitorWordPress = flag.String("host", "", "Which host to monitor, with format <schema>://<host or FQDN>")
+	useAuth          = flag.Bool("auth.basic", true, "Whether to use basic authentication (true|false)")
+	authUsername     = flag.String("auth.user", "admin", "User to use with basic auth")
+	authPassword     = flag.String("auth.pass", "admin", "Password to use with basic auth")
 )
 
 func init() {
@@ -29,11 +35,12 @@ func init() {
 
 func main() {
 	http.Handle("/metrics", promhttp.Handler())
+	fmt.Printf("Started WordPress exporter for %s\n", *monitorWordPress)
 	log.Fatal(http.ListenAndServe(":"+strconv.Itoa(*portNum), nil))
 }
 
 type Wordpress struct {
-	posts, categories, tags, pages, comments, media, users, adminUsers, themes int
+	posts, categories, tags, pages, comments, media, users, adminUsers, themes, plugins int
 }
 
 type WordpressCollector struct {
@@ -46,10 +53,18 @@ type WordpressCollector struct {
 	users      *prometheus.Desc
 	adminUsers *prometheus.Desc
 	themes     *prometheus.Desc
+	plugins    *prometheus.Desc
 }
 
 type ConfigFile struct {
 	MonitoredWordpress []string `yaml:"wordpress-exporter"`
+}
+
+type Settings struct {
+	title          string `json:"title"`
+	language       string `json:"language"`
+	ping_status    string `json:"ping_status"`
+	comment_status string `json:"comment_status"`
 }
 
 func (c *WordpressCollector) Describe(ch chan<- *prometheus.Desc) {
@@ -62,19 +77,32 @@ func (c *WordpressCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- c.users
 	ch <- c.adminUsers
 	ch <- c.themes
+	ch <- c.plugins
 }
 
 func newWordpressCollector() *WordpressCollector {
+	// var labels map[[]byte]interface{}
+	// settingsClient := http.Client{}
+	// request, err := http.NewRequest("GET", *monitorWordPress+"/wp-json/wp/v2/settings", nil)
+	// errCheck(err)
+	// request.Header.Set("User-Agent", USER_AGENT)
+	// result, err := settingsClient.Do(request)
+	// errCheck(err)
+	// resultBody, err := ioutil.ReadAll(result.Body)
+	// errCheck(err)
+	// json.Unmarshal(resultBody, &labels)
+
 	return &WordpressCollector{
-		posts:      prometheus.NewDesc("wordpress_post_count", "WordPress posts count", nil, nil),
-		categories: prometheus.NewDesc("wordpress_category_count", "WordPress category count", nil, nil),
-		tags:       prometheus.NewDesc("wordpress_tag_count", "WordPress tags count", nil, nil),
-		pages:      prometheus.NewDesc("wordpress_page_count", "WordPress pages count", nil, nil),
-		comments:   prometheus.NewDesc("wordpress_comment_count", "WordPress comments count", nil, nil),
-		media:      prometheus.NewDesc("wordpress_media_count", "WordPress media files count", nil, nil),
-		users:      prometheus.NewDesc("wordpress_user_count", "WordPress users count", nil, nil),
-		adminUsers: prometheus.NewDesc("wordpress_admin_user_count", "WordPress administrator-level user count", nil, nil),
-		themes:     prometheus.NewDesc("wordpress_theme_count", "WordPress theme count", nil, nil),
+		posts:      prometheus.NewDesc("wordpress_post_count", "WordPress posts count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		categories: prometheus.NewDesc("wordpress_category_count", "WordPress category count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		tags:       prometheus.NewDesc("wordpress_tag_count", "WordPress tags count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		pages:      prometheus.NewDesc("wordpress_page_count", "WordPress pages count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		comments:   prometheus.NewDesc("wordpress_comment_count", "WordPress comments count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		media:      prometheus.NewDesc("wordpress_media_count", "WordPress media files count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		users:      prometheus.NewDesc("wordpress_user_count", "WordPress users count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		adminUsers: prometheus.NewDesc("wordpress_admin_user_count", "WordPress administrator-level user count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		themes:     prometheus.NewDesc("wordpress_theme_count", "WordPress theme count", nil, prometheus.Labels{"instance": *monitorWordPress}),
+		plugins:    prometheus.NewDesc("wordpress_plugin_count", "Wordpress plugin count", nil, prometheus.Labels{"instance": *monitorWordPress}),
 	}
 }
 
@@ -87,13 +115,14 @@ func (c *ConfigFile) ParseConf() *ConfigFile {
 }
 
 func FetchJSONFromEndpoint(APIEndpoint string, auth bool) []byte {
-	APIBase := "https://aorfanos.com"
+	APIBase := *monitorWordPress
 	HTTPClient := &http.Client{}
 	fetchURL := fmt.Sprintf("%s%s", APIBase, APIEndpoint)
 	request, err := http.NewRequest("GET", fetchURL, nil)
+	request.Header.Set("User-Agent", UserAgent)
 	errCheck(err)
 	if auth {
-		request.Header.Add("Authentication", BasicAuth(*authUsername, *authPassword))
+		request.Header.Add("Authorization", "Basic "+BasicAuth(*authUsername, *authPassword))
 	}
 	response, err := HTTPClient.Do(request)
 	errCheck(err)
@@ -116,20 +145,20 @@ func CountJSONItems(JSONResponse []byte) int {
 
 func BasicAuth(username, password string) string {
 	authString := username + ":" + password
-	authHeaderValue := fmt.Sprintf("Basic ", base64.StdEncoding.EncodeToString([]byte(authString)))
-	return authHeaderValue
+	return base64.StdEncoding.EncodeToString([]byte(authString))
 }
 
 func (c *WordpressCollector) Collect(ch chan<- prometheus.Metric) {
 	var _wordpress = new(Wordpress)
-	_wordpress.categories = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories", false))
-	_wordpress.posts = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/posts", false))
-	_wordpress.tags = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/tags", false))
-	_wordpress.pages = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/pages", false))
-	_wordpress.comments = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/comments", false))
-	_wordpress.media = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/media", false))
-	_wordpress.users = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/users", false))
-	_wordpress.themes = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories", false))
+	_wordpress.categories = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories", *useAuth))
+	_wordpress.posts = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/posts", *useAuth))
+	_wordpress.tags = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/tags", *useAuth))
+	_wordpress.pages = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/pages", *useAuth))
+	_wordpress.comments = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/comments", *useAuth))
+	_wordpress.media = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/media", *useAuth))
+	_wordpress.users = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/users", *useAuth))
+	_wordpress.themes = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/categories", *useAuth))
+	_wordpress.plugins = CountJSONItems(FetchJSONFromEndpoint("/wp-json/wp/v2/plugins", *useAuth))
 
 	ch <- prometheus.MustNewConstMetric(c.categories, prometheus.GaugeValue, float64(_wordpress.categories))
 	ch <- prometheus.MustNewConstMetric(c.posts, prometheus.GaugeValue, float64(_wordpress.posts))
@@ -139,7 +168,7 @@ func (c *WordpressCollector) Collect(ch chan<- prometheus.Metric) {
 	ch <- prometheus.MustNewConstMetric(c.media, prometheus.GaugeValue, float64(_wordpress.media))
 	ch <- prometheus.MustNewConstMetric(c.users, prometheus.GaugeValue, float64(_wordpress.users))
 	ch <- prometheus.MustNewConstMetric(c.themes, prometheus.GaugeValue, float64(_wordpress.themes))
-
+	ch <- prometheus.MustNewConstMetric(c.plugins, prometheus.GaugeValue, float64(_wordpress.plugins))
 }
 
 func errCheck(e error) {
