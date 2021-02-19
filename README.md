@@ -44,3 +44,10 @@ scrape_configs:
 | wordpress_theme_count    | Gauge |    WordPress theme count    |
 | wordpress_plugin_count   | Gauge |    Wordpress plugin count   |
 
+## Labels
+
+- `exported_instance`: Site being monitored
+
+## Todo 
+
+- Provide config from file to monitor multiple hosts with one exporter
