@@ -1,3 +1,5 @@
+[![build and push](https://github.com/aorfanos/wordpress-exporter/actions/workflows/build-and-deploy.yaml/badge.svg)](https://github.com/aorfanos/wordpress-exporter/actions/workflows/build-and-deploy.yaml)
+
 # Prometheus WordPress exporter
 
 Exposes WordPress site metrics using the WordPress Rest API.
@@ -29,6 +31,10 @@ scrape_configs:
     static_configs:
       - targets: ["<exporter-IP>:11011"]
 ```
+
+The outcome will look something like this:
+
+![Grafana WordPress dashboard](https://imgur.com/e5A6UnM)
 
 ## Metrics
 
