@@ -6,5 +6,6 @@ RUN go build -o wordpress_exporter
 
 FROM debian:buster-slim
 WORKDIR /app
+RUN apt update && apt install -y ca-certificates
 COPY --from=build-env /build/wordpress_exporter /app
 ENTRYPOINT ["./wordpress_exporter"]
