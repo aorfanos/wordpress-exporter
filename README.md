@@ -38,6 +38,10 @@ The outcome will look something like this:
 
 ## Metrics
 
+Warning: some endpoints (e.g. plugins, settings) require authentication. 
+If you want to gather metrics for those endpoints you need to enable basic authentication on your
+WordPress installation (via e.g. a plugin or custom code).
+
 | Metric name              | Type  | Description                 |
 |--------------------------|-------|-----------------------------|
 | wordpress_post_count     | Gauge |    WordPress posts count    |
@@ -57,3 +61,4 @@ The outcome will look something like this:
 ## Todo 
 
 - Provide config from file to monitor multiple hosts with one exporter
+- Support native WordPress cookie authentication
