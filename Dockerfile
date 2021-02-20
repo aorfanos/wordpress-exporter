@@ -4,8 +4,10 @@ COPY . /build
 WORKDIR /build
 RUN go build -o wordpress_exporter
 
-FROM debian:buster-slim
+FROM alpine:latest
 WORKDIR /app
-RUN apt update && apt install -y ca-certificates
+RUN apk update && \
+    apk add ca-certificates && \
+    rm -rf /var/cache/apk/*
 COPY --from=build-env /build/wordpress_exporter /app
 ENTRYPOINT ["./wordpress_exporter"]
