@@ -1,4 +1,4 @@
-FROM golang:1.15.6-buster AS build-env
+FROM golang:1.17-alpine AS build-env
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 COPY . /build
 WORKDIR /build
