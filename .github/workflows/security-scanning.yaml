@@ -1,0 +1,42 @@
+---
+on:
+  push:
+    branches:
+      - "main"
+
+name: Snyk scans
+
+jobs:
+
+  golang-security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - uses: snyk/actions/setup@master
+      
+      - uses: actions/setup-go@v1
+        with:
+          go-version: '1.17'
+      
+      - name: Snyk monitor
+        run: snyk test
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  docker-security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Build a Docker image
+        run: docker build -t dev/wordpress-exporter .
+
+      - name: Run Snyk to check Docker image for vulnerabilities
+        continue-on-error: true
+        uses: snyk/actions/docker@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          image: dev/wordpress-exporter
+          args: --file=Dockerfile
