@@ -18,7 +18,7 @@ func (c *WordpressCollector) FetchJSONFromEndpoint(APIEndpoint string) []byte {
 	request.Header.Set("User-Agent", c.Wp.UserAgent)
 	ErrCheck(err)
 	if c.Wp.Auth.Use {
-		request.Header.Add("Authorization", "Basic "+BasicAuth(c.Wp.Auth.Username, c.Wp.Auth.Password))
+		request.SetBasicAuth(c.Wp.Auth.Username, c.Wp.Auth.Password)
 	}
 	response, err := HTTPClient.Do(request)
 	ErrCheck(err)
@@ -27,16 +27,19 @@ func (c *WordpressCollector) FetchJSONFromEndpoint(APIEndpoint string) []byte {
 }
 
 // count items returned in JSON and return length
-func CountJSONItems(JSONResponse []byte) int {
+func CountJSONItems(JSONResponse []byte) (int, error) {
+	var err error
 	var JSONObject interface{}
 	json.Unmarshal(JSONResponse, &JSONObject)
 
 	JSONObjectSlice, isOK := JSONObject.([]interface{})
 	if !isOK {
-		fmt.Println("Cannot convert the JSON object")
+		err = fmt.Errorf("Cannot convert the JSON object")
+		// return -1 if json cannot be parsed properly
+		return -1, err
 	}
 
-	return len(JSONObjectSlice)
+	return len(JSONObjectSlice), err
 }
 
 func BasicAuth(username, password string) string {

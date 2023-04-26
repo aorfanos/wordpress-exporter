@@ -1,7 +1,7 @@
 package utils
 
 type Wordpress struct {
-	posts, categories, tags, pages, comments, media, users, adminUsers, themes, plugins int
+	posts, categories, tags, pages, comments, media, users, adminUsers, themes, plugins, taxonomies int
 	MonitoredWordpress string
 	UserAgent string
 	Auth WPAuth
