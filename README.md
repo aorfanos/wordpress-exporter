@@ -36,6 +36,10 @@ The outcome will look something like this:
 
 ![Grafana WordPress dashboard](https://i.imgur.com/e5A6UnM.png)
 
+### Authenticating to WordPress API
+
+Since version 5.6, WordPress has introduced the ability to use [Application Passwords](https://developer.wordpress.org/rest-api/using-the-rest-api/authentication/#basic-authentication-with-application-passwords) for performing basic authentication. This new feature is now the recommended way to securely access the REST API, making it easier for developers to build applications and services that integrate with WordPress while maintaining a high level of security.
+
 ## Metrics
 
 Warning: some endpoints (e.g. plugins, settings) require authentication. 
