@@ -1,5 +1,5 @@
-[![build and push](https://github.com/aorfanos/wordpress-exporter/actions/workflows/build-and-deploy.yaml/badge.svg)](https://github.com/aorfanos/wordpress-exporter/actions/workflows/build-and-deploy.yaml)
-
+[![Snyk scans](https://github.com/aorfanos/wordpress-exporter/actions/workflows/security-scanning.yaml/badge.svg)](https://github.com/aorfanos/wordpress-exporter/actions/workflows/security-scanning.yaml)
+[![Build and Push Go Code to Github Container Registry](https://github.com/aorfanos/wordpress-exporter/actions/workflows/build.yaml/badge.svg)](https://github.com/aorfanos/wordpress-exporter/actions/workflows/build.yaml)
 # Prometheus WordPress exporter
 
 Exposes WordPress site metrics using the WordPress Rest API.
