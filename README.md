@@ -9,13 +9,21 @@ Exposes WordPress site metrics using the WordPress Rest API.
 - Install the exporter (it doesn't need to be at the same machine as your site, as long as it can reach it by network): 
 
 ```console
-docker pull saikolab/wordpress-exporter
+docker pull ghcr.io/aorfanos/wordpress-exporter/wordpress-exporter
 
+# run plain, without authentication
 docker run -d --publish 11011:11011 \
-  -it saikolab/wordpress-exporter \
-  -auth.user admin \
-  -auth.pass adminpassword \
-  -host https://aorfanos.com
+  -it ghcr.io/aorfanos/wordpress-exporter/wordpress-exporter:v0.0.8 \
+  -host http://example.com \
+  -auth.basic false
+
+# authenticated to wordpress api (return data from all endpoints)
+docker run -d --publish 11011:11011 \
+  -it ghcr.io/aorfanos/wordpress-exporter/wordpress-exporter:v0.0.8 \
+  -auth.user wordpress-exporter \
+  -auth.pass "Wdnh 7Wm0 UuxW 64DL y2lx r0It" \ # Application password for authenticated use
+  -host http://example.com \
+  -auth.basic true
 ```
 
 - Put scrape configuration in your `prometheus.yml`:
@@ -42,10 +50,6 @@ Since version 5.6, WordPress has introduced the ability to use [Application Pass
 
 ## Metrics
 
-Warning: some endpoints (e.g. plugins, settings) require authentication. 
-If you want to gather metrics for those endpoints you need to enable basic authentication on your
-WordPress installation (via e.g. a plugin or custom code).
-
 | Metric name              | Type  | Description                 |
 |--------------------------|-------|-----------------------------|
 | wordpress_post_count     | Gauge |    WordPress posts count    |
@@ -55,6 +59,7 @@ WordPress installation (via e.g. a plugin or custom code).
 | wordpress_comment_count  | Gauge |   WordPress comments count  |
 | wordpress_media_count    | Gauge | WordPress media files count |
 | wordpress_user_count     | Gauge |    WordPress users count    |
+| wordpress_taxonomy_count | Gauge |    WordPress taxonomy count |
 | wordpress_theme_count    | Gauge |    WordPress theme count    |
 | wordpress_plugin_count   | Gauge |    Wordpress plugin count   |
 
