@@ -1,8 +1,8 @@
-FROM golang:1.17-alpine AS build-env
+FROM golang:1.19-alpine AS build-env
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 COPY . /build
 WORKDIR /build
-RUN go build -o wordpress_exporter
+RUN go build -o  wordpress_exporter ./exporter/cmd/main.go
 
 FROM gcr.io/distroless/static
 WORKDIR /app
