@@ -17,7 +17,7 @@ const (
 )
 
 var (
-	portNum          = flag.Int("port", 11012, "The port to expose metrics to")
+	portNum          = flag.Int("port", 11011, "The port to expose metrics to")
 	configFile       = flag.String("config.file", "wordpress-exporter.yml", "Configure which WordPress sites to monitor")
 	monitorWordPress = flag.String("host", "", "Which host to monitor, with format <schema>://<host or FQDN>")
 	useAuth          = flag.Bool("auth.basic", true, "Whether to use basic authentication (true|false)")
