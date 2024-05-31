@@ -28,6 +28,5 @@ jobs:
 
       - name: Cleanup
         run: |
-          docker image rm ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }}
-          docker image rm ghcr.io/${{ github.repository }}/wordpress-exporter:latest
+          docker image rm ghcr.io/${{ github.repository }}/wordpress-exporter --all-tags
           docker logout ghcr.io
