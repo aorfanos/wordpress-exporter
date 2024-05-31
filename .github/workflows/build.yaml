@@ -21,12 +21,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }} .
+        run: docker build -t ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }} ghcr.io/${{ github.repository }}/wordpress-exporter:latest .
 
       - name: Push Docker image to GitHub Container Registry
-        run: docker push ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }}
+        run: docker push ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }} ghcr.io/${{ github.repository }}/wordpress-exporter:latest
 
       - name: Cleanup
         run: |
           docker image rm ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }}
+          docker image rm ghcr.io/${{ github.repository }}/wordpress-exporter:latest
           docker logout ghcr.io
