@@ -21,7 +21,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Docker image
-        run: docker build -t ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }} ghcr.io/${{ github.repository }}/wordpress-exporter:latest .
+        run: docker build -t ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }} -t ghcr.io/${{ github.repository }}/wordpress-exporter:latest .
 
       - name: Push Docker image to GitHub Container Registry
         run: docker push ghcr.io/${{ github.repository }}/wordpress-exporter:${{ github.ref_name }} ghcr.io/${{ github.repository }}/wordpress-exporter:latest
