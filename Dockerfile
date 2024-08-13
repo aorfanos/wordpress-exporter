@@ -1,4 +1,4 @@
-FROM golang:1.19-alpine AS build-env
+FROM golang:1.23-alpine AS build-env
 ENV GOOS=linux GOARCH=amd64 CGO_ENABLED=0
 COPY . /build
 WORKDIR /build
